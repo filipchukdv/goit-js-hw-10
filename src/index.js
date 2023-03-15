@@ -8,6 +8,29 @@ const searchBoxRef = document.querySelector('input#search-box');
 const countryListRef = document.querySelector('.country-list');
 const countryInfoRef = document.querySelector('.country-info');
 
+function createList(data) {
+  const markup = data
+    .map(
+      ({ name, flags }) =>
+        `<div><img src=${flags.svg} alt="Flag of ${name}" width="30"> <span>${name}</span></div>`
+    )
+    .join(' ');
+  countryListRef.innerHTML = markup;
+}
+function createCountryList(data) {
+  const { name, capital, population, flags, languages } = data[0];
+  const markup = `<div><img src="${
+    flags.svg
+  }" alt="flag of ${name}" width="50" /><span class="country-name">${name}</span></div>
+  <div><span class="title">Capital: </span><span class="title-value">${capital}</span></div>
+  <div><span class="title">Population: </span><span class="title-value">${population}</span></div>
+  <div><span class="title">Languages: </span><span class="title-value">${languages.map(
+    lang => lang.name
+  )}</span</div>`;
+
+  countryListRef.innerHTML = markup;
+}
+
 searchBoxRef.addEventListener('input', debounce(onInputChange, DEBOUNCE_DELAY));
 
 function onInputChange(e) {
@@ -17,47 +40,17 @@ function onInputChange(e) {
     return;
   }
   fetchCountries(value)
-    .then(response => {
-      countryListRef.innerHTML = ' ';
-      if (!response.ok) {
-        Notify.failure('Oops, there is no country with that name');
-        throw new Error(response.status);
-      }
-      return response.json();
-    })
     .then(data => {
       console.log(data);
-
       if (data.length > 10) {
+        countryListRef.innerHTML = ' ';
         Notify.info(
           'Too many matches found. Please enter a more specific name.'
         );
       } else if (data.length < 11 && data.length > 1) {
-        createList();
-        function createList() {
-          const markup = data
-            .map(
-              ({ name, flags }) =>
-                `<div><img src=${flags.svg} alt="Flag of ${name}" width="30"> <span>${name}</span></div>`
-            )
-            .join(' ');
-          countryListRef.innerHTML = markup;
-        }
+        createCountryList(data);
       } else {
-        createCountry();
-        function createCountry() {
-          const { name, capital, population, flags, languages } = data[0];
-          const markup = `<div><img src="${
-            flags.svg
-          }" alt="flag of ${name}" width="50" /><span class="country-name">${name}</span></div>
-  <div><span class="title">Capital: </span><span class="title-value">${capital}</span></div>
-  <div><span class="title">Population: </span><span class="title-value">${population}</span></div>
-  <div><span class="title">Languages: </span><span class="title-value">${languages.map(
-    lang => lang.name
-  )}</span</div>`;
-
-          countryListRef.innerHTML = markup;
-        }
+        createCountry(data);
       }
     })
     .catch(error => console.log(error));
